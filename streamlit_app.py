@@ -47,11 +47,13 @@ if ingredients_list and name_on_order:
         smoothiefroot_response.json(),
         use_container_width=True
     )
+    else:
+        st.error("Failed to fetch fruit data")  
         st.success("Your Smoothie is ordered!", icon="✅")
+ 
 
 # ---- External API example ----
 st.header("Fruit Nutrition Info")
 
 
-else:
-    st.error("Failed to fetch fruit data")
+
