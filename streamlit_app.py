@@ -14,9 +14,11 @@ cnx = st.connection("snowflake")
 session = cnx.session()
 
 # Get fruit options
-fruit_df = session.table("smoothies.public.fruit_options") \
-                  .select(col("Fruit_Name")) \
-                  .collect()
+fruit_df = (
+    session.table("smoothies.public.fruit_options")
+    .select(col("Fruit_Name"))
+    .collect()
+)
 
 fruit_list = [row["FRUIT_NAME"] for row in fruit_df]
 
@@ -31,29 +33,29 @@ ingredients_list = st.multiselect(
 if ingredients_list and name_on_order:
     ingredients_string = ", ".join(ingredients_list)
 
-    time_to_insert = st.button("Submit Order")
-
-    if time_to_insert:
+    if st.button("Submit Order"):
         insert_stmt = """
             INSERT INTO smoothies.public.orders (ingredients, name_on_order)
             VALUES (%s, %s)
         """
-        session.sql(insert_stmt, params=[ingredients_string, name_on_order]).collect()
-        smoothiefroot_response = requests.get(
-    "https://my.smoothiefroot.com/api/fruit/watermelon")
+        session.sql(
+            insert_stmt,
+            params=[ingredients_string, name_on_order]
+        ).collect()
 
-    if smoothiefroot_response.status_code == 200:
-        st.dataframe(
-        smoothiefroot_response.json(),
-        use_container_width=True
-    )
-    else:
-        st.error("Failed to fetch fruit data")  
         st.success("Your Smoothie is ordered!", icon="✅")
- 
 
 # ---- External API example ----
 st.header("Fruit Nutrition Info")
 
+smoothiefroot_response = requests.get(
+    "https://my.smoothiefroot.com/api/fruit/watermelon"
+)
 
-
+if smoothiefroot_response.status_code == 200:
+    st.dataframe(
+        smoothiefroot_response.json(),
+        use_container_width=True
+    )
+else:
+    st.error("Failed to fetch fruit data")
