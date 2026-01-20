@@ -39,19 +39,19 @@ if ingredients_list and name_on_order:
             VALUES (%s, %s)
         """
         session.sql(insert_stmt, params=[ingredients_string, name_on_order]).collect()
+        smoothiefroot_response = requests.get(
+    "https://my.smoothiefroot.com/api/fruit/watermelon")
+
+    if smoothiefroot_response.status_code == 200:
+    st.dataframe(
+        smoothiefroot_response.json(),
+        use_container_width=True
+    )
         st.success("Your Smoothie is ordered!", icon="✅")
 
 # ---- External API example ----
 st.header("Fruit Nutrition Info")
 
-smoothiefroot_response = requests.get(
-    "https://my.smoothiefroot.com/api/fruit/watermelon"
-)
 
-if smoothiefroot_response.status_code == 200:
-    st.dataframe(
-        smoothiefroot_response.json(),
-        use_container_width=True
-    )
 else:
     st.error("Failed to fetch fruit data")
