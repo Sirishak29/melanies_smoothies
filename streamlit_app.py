@@ -1,61 +1,30 @@
-import streamlit as st
-import requests
-from snowflake.snowpark.functions import col
+import pandas as pd
 
-st.title("Custom_Smoothie_Order_Form :cup_with_straw:")
-st.write("Choose the fruits you want in your custom Smoothie.")
-
-# Name input
-name_on_order = st.text_input("Name on Smoothie:")
-st.write("The name on your smoothie is:", name_on_order)
-
-# Snowflake connection
-cnx = st.connection("snowflake")
-session = cnx.session()
-
-# Get fruit options
-fruit_df = (
-    session.table("smoothies.public.fruit_options")
-    .select(col("Fruit_Name"))
-    .collect()
-)
-
-fruit_list = [row["FRUIT_NAME"] for row in fruit_df]
-
-# Multiselect
-ingredients_list = st.multiselect(
-    "Choose up to 5 ingredients:",
-    fruit_list,
-    max_selections=5
-)
-
-# Submit order
-if ingredients_list and name_on_order:
-    ingredients_string = ", ".join(ingredients_list)
-
-    if st.button("Submit Order"):
-        insert_stmt = """
-            INSERT INTO smoothies.public.orders (ingredients, name_on_order)
-            VALUES (%s, %s)
-        """
-        session.sql(
-            insert_stmt,
-            params=[ingredients_string, name_on_order]
-        ).collect()
-
-        st.success("Your Smoothie is ordered!", icon="✅")
-
-# ---- External API example ----
 st.header("Fruit Nutrition Info")
 
-smoothiefroot_response = requests.get(
-    "https://my.smoothiefroot.com/api/fruit/watermelon"
-)
+if ingredients_list:
+    nutrition_data = []
 
-if smoothiefroot_response.status_code == 200:
-    st.dataframe(
-        smoothiefroot_response.json(),
-        use_container_width=True
-    )
+    for fruit in ingredients_list:
+        api_url = f"https://my.smoothiefroot.com/api/fruit/{fruit.lower()}"
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            fruit_json = response.json()
+
+            nutrition_data.append({
+                "Fruit": fruit_json["name"].title(),
+                "Calories": fruit_json["nutritions"]["calories"],
+                "Fat": fruit_json["nutritions"]["fat"],
+                "Sugar": fruit_json["nutritions"]["sugar"],
+                "Carbohydrates": fruit_json["nutritions"]["carbohydrates"],
+                "Protein": fruit_json["nutritions"]["protein"]
+            })
+        else:
+            st.warning(f"Nutrition data not available for {fruit}")
+
+    if nutrition_data:
+        nutrition_df = pd.DataFrame(nutrition_data)
+        st.dataframe(nutrition_df, use_container_width=True)
 else:
-    st.error("Failed to fetch fruit data")
+    st.info("Select fruits to see nutrition information.")
