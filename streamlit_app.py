@@ -6,7 +6,7 @@ if ingredients_list:
     nutrition_data = []
 
     for fruit in ingredients_list:
-        api_url = f"https://my.smoothiefroot.com/api/fruit/{fruit.lower()}"
+        api_url = f"https://my.smoothiefroot.com/api/fruit/watermelon"
         response = requests.get(api_url)
 
         if response.status_code == 200:
@@ -21,7 +21,7 @@ if ingredients_list:
                 "Protein": fruit_json["nutritions"]["protein"]
             })
         else:
-            st.warning(f"Nutrition data not available for {fruit}")
+            st.warning(f"Nutrition data not available for watermelon")
 
     if nutrition_data:
         nutrition_df = pd.DataFrame(nutrition_data)
