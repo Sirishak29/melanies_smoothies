@@ -1,30 +1,56 @@
-import pandas as pd
+# Import python packages
+import streamlit as st
+#from snowflake.snowpark.context import get_active_session
+import requests
+# Write directly to the app
+st.title(f"Custom_Smoothie_Order_Form :cup_with_straw: ")
+st.write(
+  """Choose the fruits you want in your custom Smoothie).
+  """
+)
 
-st.header("Fruit Nutrition Info")
+#import streamlit as st
+name_on_order= st.text_input('Name on Smoothie:')
+st.write('The name on your smoothie is:', name_on_order)
 
+from snowflake.snowpark.functions import col
+cnx= st.connection("snowflake")
+session=cnx.session()
+
+#session = get_active_session()
+my_dataframe = session.table("smoothies.public.fruit_options").select(col('Fruit_Name'))
+#st.dataframe(data=my_dataframe, use_container_width=True)
+
+ingredients_list = st.multiselect(
+    'Choose up to 5 ingredients:'
+    ,my_dataframe
+    , max_selections=5
+     )
 if ingredients_list:
-    nutrition_data = []
+    #st.write(ingredients_list)
+    #st.text(ingredients_list)
+    
+    ingredients_string=''
+    
+    for fruit_chosen in ingredients_list:
+        ingredients_string +=fruit_chosen
+    #st.write(ingredients_list)
 
-    for fruit in ingredients_list:
-        api_url = f"https://my.smoothiefroot.com/api/fruit/watermelon"
-        response = requests.get(api_url)
+    my_insert_stmt = """ insert into smoothies.public.orders(ingredients,name_on_order )
+            values ('""" + ingredients_string + """', '""" + name_on_order + """')"""
 
-        if response.status_code == 200:
-            fruit_json = response.json()
+    time_to_insert = st.button('Submit Order')
+   
+    st.write(my_insert_stmt)
 
-            nutrition_data.append({
-                "Fruit": fruit_json["name"].title(),
-                "Calories": fruit_json["nutritions"]["calories"],
-                "Fat": fruit_json["nutritions"]["fat"],
-                "Sugar": fruit_json["nutritions"]["sugar"],
-                "Carbohydrates": fruit_json["nutritions"]["carbohydrates"],
-                "Protein": fruit_json["nutritions"]["protein"]
-            })
-        else:
-            st.warning(f"Nutrition data not available for watermelon")
+    if time_to_insert:
+       session.sql(my_insert_stmt).collect()
+       st.success('Your Smoothie is ordered!', icon="✅")
+st.stop()
 
-    if nutrition_data:
-        nutrition_df = pd.DataFrame(nutrition_data)
-        st.dataframe(nutrition_df, use_container_width=True)
-else:
-    st.info("Select fruits to see nutrition information.")
+#import requests
+smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/watermelon")
+#st.text(smoothiefroot_response.json())
+st_df = st.dataframe(data.smoothiefroot_response.json(), use_contaner_width=True)
+
+        
