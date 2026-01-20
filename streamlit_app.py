@@ -43,7 +43,7 @@ if ingredients_list and name_on_order:
     "https://my.smoothiefroot.com/api/fruit/watermelon")
 
     if smoothiefroot_response.status_code == 200:
-    st.dataframe(
+        st.dataframe(
         smoothiefroot_response.json(),
         use_container_width=True
     )
